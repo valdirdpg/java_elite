@@ -1,0 +1,65 @@
+# ============================
+# Arquivos do Java
+# ============================
+*.class
+*.log
+*.ctxt
+
+# Diretórios de build
+/build/
+/out/
+/bin/
+
+# ============================
+# Gradle
+# ============================
+# Diretório de cache do Gradle (NÃO deve ir para o Git)
+.gradle/
+
+# Permitir configurações do Gradle
+!gradle/wrapper/*
+!gradle/libs.versions.toml
+
+# ============================
+# IDEs
+# ============================
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Eclipse
+.project
+.classpath
+.settings/
+.metadata/
+
+# VS Code
+.vscode/
+
+# ============================
+# SO / Arquivos temporários
+# ============================
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+*.swo
+
+# ============================
+# Logs e relatórios
+# ============================
+*.log
+hs_err_pid*
+replay_pid*
+
+# ============================
+# Arquivos de pacotes
+# ============================
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
