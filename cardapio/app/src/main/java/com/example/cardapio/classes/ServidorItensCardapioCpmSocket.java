@@ -1,33 +1,34 @@
 package com.example.cardapio.classes;
 
-import static java.lang.IO.println;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import static java.lang.IO.println;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ServidorItensCardapioCpmSocket {
     void main() throws Exception {
-        // ServidorItensCardapio servidor = new ServidorItensCardapio();
+        ExecutorService executorService = Executors.newFixedThreadPool(50);
         try (ServerSocket serverSocket = new ServerSocket(8080)) {
             println("Servidor iniciado na porta 8080");
             while (true) {
                 Socket clienteSocket = serverSocket.accept();{
-                    Thread thread = new Thread(() -> {
+                    executorService.execute(() -> {
                         try {
                             processaRequisicao(clienteSocket);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
                     });
-                    thread.start();
+                    //thread.start();
                     //processaRequisicao(clienteSocket);
                 }
                 
