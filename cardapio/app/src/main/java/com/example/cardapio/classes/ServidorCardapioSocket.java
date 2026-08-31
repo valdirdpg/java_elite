@@ -16,16 +16,17 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
 public class ServidorCardapioSocket {
-    private static final int PORTA = 8080;
+    private static final int PORTA = 8081;
     private final Gson gson = new Gson();
-    private final List<ItemCardapio> itens = new CopyOnWriteArrayList<>(Database.itensDoCardapio());
+    BancoDados database = new SQLDatabase();
+    private final List<ItemCardapio> itens = new CopyOnWriteArrayList<>(database.itensDoCardapio());
 
     public static void main(String[] args) throws IOException {
         new ServidorCardapioSocket().iniciar();
     }
 
     private void iniciar() throws IOException {
-        ExecutorService executor = Executors.newFixedThreadPool(50);
+        ExecutorService executor = Executors.newFixedThreadPool(10);
         try (ServerSocket servidor = new ServerSocket(PORTA)) {
             System.out.println("Servidor iniciado na porta " + PORTA);
             while (!servidor.isClosed()) {

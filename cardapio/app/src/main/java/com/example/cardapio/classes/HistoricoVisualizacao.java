@@ -18,9 +18,9 @@ import java.util.WeakHashMap;
  * @author valdi
  */
 public class HistoricoVisualizacao {
-    private final Database2 database;
+    private final BancoDados database;
     private final Map<ItemCardapio, LocalDateTime> visualizacoes = new WeakHashMap<>();
-    public HistoricoVisualizacao(Database2 database) {
+    public HistoricoVisualizacao(BancoDados database) {
         this.database = database;
     }
     

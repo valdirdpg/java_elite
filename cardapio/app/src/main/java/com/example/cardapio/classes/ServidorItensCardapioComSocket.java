@@ -14,7 +14,7 @@ import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class ServidorItensCardapioCpmSocket {
+public class ServidorItensCardapioComSocket {
     void main() throws Exception {
         ExecutorService executorService = Executors.newFixedThreadPool(50);
         try (ServerSocket serverSocket = new ServerSocket(8080)) {

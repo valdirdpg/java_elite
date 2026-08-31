@@ -11,6 +11,12 @@ package com.example.cardapio.classes;
 public record ItemCardapio(Long id, String nome, String descricao, double preco, double precoComDesconto, CategoriaCardapio categoria) {
 
     public enum CategoriaCardapio {
-        ENTRADA,PRATOS_PRINCIPAIS,SOBREMESAS,BEBIDAS,LANCHES;
+        ENTRADA,PRATO_PRINCIPAL,SOBREMESA,BEBIDAS,LANCHES;
+    }
+
+    public ItemCardapio criarNovoItemCardapio(long id, String nome, String descricao, double novoPreco,
+                                              double precoComDesconto, CategoriaCardapio categoria) {
+        return new ItemCardapio(id, nome, descricao, novoPreco, precoComDesconto, categoria);
+
     }
 }
