@@ -50,12 +50,12 @@ public class MainStreamMap {
         // Mantém as categorias que estão em promoção
         Set<ItemCardapio.CategoriaCardapio> categoriasEmPromocao
                 = EnumSet.of(
-                        SOBREMESAS,
+                        SOBREMESA,
                         ENTRADA
                 );
 
 // Adiciona mais uma categoria à promoção
-        categoriasEmPromocao.add(PRATOS_PRINCIPAIS);
+        categoriasEmPromocao.add(PRATO_PRINCIPAL);
 
 // Exibe todas as categorias em promoção
         categoriasEmPromocao.forEach(System.out::println);
@@ -63,7 +63,7 @@ public class MainStreamMap {
         println("=========================OUTRO JEITO DE FAZER O MESMO 3===================");
 
         Set<ItemCardapio.CategoriaCardapio> categoriasEmPromocao2 = Set.of(
-                SOBREMESAS,
+                SOBREMESA,
                 ENTRADA
         );
         //categoriasEmPromocao2.add(LANCHES);
@@ -73,20 +73,20 @@ public class MainStreamMap {
 
         categoriasEmPromocao3.add(BEBIDAS);
         categoriasEmPromocao3.add(LANCHES);
-        categoriasEmPromocao3.add(PRATOS_PRINCIPAIS);
+        categoriasEmPromocao3.add(PRATO_PRINCIPAL);
         categoriasEmPromocao3.forEach(System.out::println);
 
         // PRECISO DAS DESCRICOES ASSOCIADAS AS CATEGORIAS EM PROMOCAO
         Map<ItemCardapio.CategoriaCardapio, String> promocoes
                 = new EnumMap<>(ItemCardapio.CategoriaCardapio.class);
-        promocoes.put(SOBREMESAS, "O doce perfeito para você!");
+        promocoes.put(SOBREMESA, "O doce perfeito para você!");
         promocoes.put(ENTRADA, "Comece sua refeição com um toque de sabor!");
         System.out.println(promocoes);
 
         Map<ItemCardapio.CategoriaCardapio, String> promocoes2 = new HashMap<>();
         println("=============FAZ A MESMA COISA SÓ QUE MAIS LENTO=============");
-        promocoes2.put(ItemCardapio.CategoriaCardapio.SOBREMESAS, "O doce perfeito para você!");
-        promocoes2.put(ItemCardapio.CategoriaCardapio.ENTRADA, "Comece sua refeição com um toque de sabor!");
+        promocoes2.put(SOBREMESA, "O doce perfeito para você!");
+        promocoes2.put(ENTRADA, "Comece sua refeição com um toque de sabor!");
 
         System.out.println(promocoes2);
 

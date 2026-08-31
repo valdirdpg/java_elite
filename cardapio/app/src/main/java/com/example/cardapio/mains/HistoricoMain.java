@@ -6,8 +6,10 @@ package com.example.cardapio.mains;
 
 import static java.lang.IO.println;
 
+import com.example.cardapio.classes.BancoDados;
 import com.example.cardapio.classes.Database2;
 import com.example.cardapio.classes.HistoricoVisualizacao;
+import com.example.cardapio.classes.InMemoryDatabase;
 
 /**
  *
@@ -15,7 +17,7 @@ import com.example.cardapio.classes.HistoricoVisualizacao;
  */
 public class HistoricoMain {
 
-    Database2 database = new Database2();
+    BancoDados database = new InMemoryDatabase();
 
     void main() throws InterruptedException {
         HistoricoVisualizacao historico = new HistoricoVisualizacao(database);
@@ -25,8 +27,8 @@ public class HistoricoMain {
         historico.registrarVisualizacao(18L);
         
         
-        println("\n=============testando todas as op��es de lambda==========");
-        database.itensPorId.forEach((chave,valor) -> println( "chave: "+chave + " valor: "+valor));
+        println("\n=============testando todas as opções de lambda==========");
+        ((InMemoryDatabase) database).itensPorId.forEach((chave, valor) -> println("chave: " + chave + " valor: " + valor));
         //println(database.itensPorId);
         Long idParaRemover = 1L;
         var removido = database.removerItemCardpio(idParaRemover);

@@ -12,7 +12,7 @@ import com.google.gson.Gson;
 public record GeradorItensCardapioJSON() {
     
     void main() throws IOException{
-        Database2 database = new Database2();
+        BancoDados database = new InMemoryDatabase();
         List<ItemCardapio> listarItensCardapio = database.itensDoCardapio();
         Gson gson = new Gson();
         String json = gson.toJson(listarItensCardapio);

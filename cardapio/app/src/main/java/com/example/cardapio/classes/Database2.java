@@ -4,23 +4,22 @@
  */
 package com.example.cardapio.classes;
 
-import static com.example.cardapio.classes.ItemCardapio.CategoriaCardapio.*;
-
 import java.util.ArrayList;
-import java.util.HashMap;
-
-
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import static com.example.cardapio.classes.ItemCardapio.CategoriaCardapio.*;
 
 /**
  *
  * @author valdir.santos
  */
 public class Database2 {
-
-    public Map<Long, ItemCardapio> itensPorId = new HashMap<>();
+    //para le dar com concorrência utilizando um Map, é preciso utilizar um Map thread-safe, 
+    //como ConcurrentHashMap, para evitar problemas de concorrência.
+    public final Map<Long, ItemCardapio> itensPorId = new ConcurrentHashMap<>();
+    //public Map<Long, ItemCardapio> itensPorId = new HashMap<>();
 
     public Database2() {
 
@@ -29,7 +28,7 @@ public class Database2 {
         itensPorId.put(1L, refrescoDoChaves);
 
         var sanduicheDoChaves = new ItemCardapio(2L, "Sanduíche de Presunto do Chaves",
-                "Sanduíche de presunto simples, mas feito com muito amor.", 3.50, 0, PRATOS_PRINCIPAIS);
+                "Sanduíche de presunto simples, mas feito com muito amor.", 3.50, 0, PRATO_PRINCIPAL);
         itensPorId.put(2L, sanduicheDoChaves);
 
         var tortaDeFrango = new ItemCardapio(3L, "Torta de Frango da Dona Florinda",
@@ -45,14 +44,14 @@ public class Database2 {
         itensPorId.put(5L, aguaJamaica);
 
         var churrosDoChaves = new ItemCardapio(6L, "Churros do Chaves",
-                "Churros recheados com doce de leite, clássicos e irresistíveis.", 4.99, 0, SOBREMESAS);
+                "Churros recheados com doce de leite, clássicos e irresistíveis.", 4.99, 0, SOBREMESA);
         itensPorId.put(6L, churrosDoChaves);
 
         var tacosDeCarnitas = new ItemCardapio(7L, "Tacos de Carnitas",
-                "Tacos recheados com carne tenra", 25.9, 0, PRATOS_PRINCIPAIS);
+                "Tacos recheados com carne tenra", 25.9, 0, PRATO_PRINCIPAL);
         itensPorId.put(7L, tacosDeCarnitas);
         var batataDoce = new ItemCardapio(8L, "Batata Doce",
-                "Batata fatiada com caramelo", 15.9, 0, PRATOS_PRINCIPAIS);
+                "Batata fatiada com caramelo", 15.9, 0, PRATO_PRINCIPAL);
         itensPorId.put(8L, batataDoce);
 
     }

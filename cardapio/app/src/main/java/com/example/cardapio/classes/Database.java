@@ -4,11 +4,10 @@
  */
 package com.example.cardapio.classes;
 
-import static com.example.cardapio.classes.ItemCardapio.CategoriaCardapio.*;
-
 import java.util.LinkedList;
-
 import java.util.List;
+
+import static com.example.cardapio.classes.ItemCardapio.CategoriaCardapio.*;
 
 /**
  *
@@ -23,7 +22,7 @@ public class Database {
         itens.add(refrescoDoChaves);
 
         var sanduicheDoChaves = new ItemCardapio(2L, "Sanduíche de Presunto do Chaves",
-                "Sanduíche de presunto simples, mas feito com muito amor.", 3.50, 0, PRATOS_PRINCIPAIS);
+                "Sanduíche de presunto simples, mas feito com muito amor.", 3.50, 0, PRATO_PRINCIPAL);
         itens.add(sanduicheDoChaves);
 
         var tortaDeFrango = new ItemCardapio(3L, "Torta de Frango da Dona Florinda",
@@ -39,14 +38,14 @@ public class Database {
         itens.add(aguaJamaica);
 
         var churrosDoChaves = new ItemCardapio(6L, "Churros do Chaves",
-                "Churros recheados com doce de leite, clássicos e irresistíveis.", 4.99, 0, SOBREMESAS);
+                "Churros recheados com doce de leite, clássicos e irresistíveis.", 4.99, 0, SOBREMESA);
         itens.add(churrosDoChaves);
 
         var tacosDeCarnitas = new ItemCardapio(7L, "Tacos de Carnitas",
-                "Tacos recheados com carne tenra", 25.9, 0, PRATOS_PRINCIPAIS);
+                "Tacos recheados com carne tenra", 25.9, 0, PRATO_PRINCIPAL);
         itens.add(tacosDeCarnitas);
         var batataDoce = new ItemCardapio(8L, "Batata Doce",
-                "Batata fatiada com caramelo", 15.9, 0, PRATOS_PRINCIPAIS);
+                "Batata fatiada com caramelo", 15.9, 0, PRATO_PRINCIPAL);
         itens.add(batataDoce);
 
         return itens;
