@@ -1,0 +1,16 @@
+services:
+  db.cardapio:
+    image: mysql:latest
+    container_name: db.cardapio
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: cardapio
+      MYSQL_ROOT_PASSWORD: root123456
+    volumes:
+      - mysql.cardapio:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+volumes:
+  mysql.cardapio:
+    driver: local
