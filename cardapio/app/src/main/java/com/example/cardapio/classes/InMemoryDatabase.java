@@ -4,6 +4,13 @@
  */
 package com.example.cardapio.classes;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -87,11 +94,12 @@ public class InMemoryDatabase implements BancoDados {
         }
         return false;
     }
+
     @Override
     public ItemCardapio adcionarItemCardapio(Long id, String nome, String descricao, double preco,
-                                             double preco_promocional, ItemCardapio.CategoriaCardapio categoria){
-        var item = new ItemCardapio(id,nome,descricao,preco,0,categoria);
-        itensPorId.put(id,item);
+                                             double preco_promocional, ItemCardapio.CategoriaCardapio categoria) {
+        var item = new ItemCardapio(id, nome, descricao, preco, 0, categoria);
+        itensPorId.put(id, item);
         return item;
     }
 
@@ -103,5 +111,60 @@ public class InMemoryDatabase implements BancoDados {
     @Override
     public String toString() {
         return "Banco de Dados{" + "itensPorId=" + itensPorId + '}' + "\n";
+    }
+
+    // Sua estrutura ParChaveValor
+    public record ParChaveValor(String chave, Object valor) {
+    }
+
+    @Override
+    @SuppressWarnings(value = "unused")
+    public List<ParChaveValor> extrairDeArquivoJson(String nomeArquivo) {
+        List<ParChaveValor> lista = new ArrayList<>();
+        ObjectMapper mapper = new ObjectMapper();
+
+        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(nomeArquivo)) {
+            if (inputStream == null) {
+                System.err.println("Arquivo não encontrado: " + nomeArquivo);
+                return new ArrayList<>(); // RETORNA LISTA VAZIA, NÃO NULL
+            }
+
+            JsonNode jsonTree = mapper.readTree(inputStream);
+            if (jsonTree == null) {
+                return new ArrayList<>(); // RETORNA LISTA VAZIA, NÃO NULL
+            }
+
+            if (jsonTree.isArray()) {
+                for (JsonNode item : jsonTree) {
+                    processarCampos(item, lista);
+                }
+            } else if (jsonTree.isObject()) {
+                processarCampos(jsonTree, lista);
+            }
+
+            return lista;
+
+        } catch (Exception e) {
+            System.err.println("Erro ao processar JSON: " + e.getMessage());
+            return new ArrayList<>(); // RETORNA LISTA VAZIA EM CASO DE EXCEÇÃO
+        }
+    }
+
+    // Método auxiliar para ler as chaves e valores
+    private void processarCampos(JsonNode noObjeto, List<ParChaveValor> lista) {
+        noObjeto.fields().forEachRemaining(entry -> {
+            String key = entry.getKey();
+            JsonNode value = entry.getValue();
+
+            Object valor = switch (value.getNodeType()) {
+                case NUMBER -> value.numberValue();
+                case BOOLEAN -> value.booleanValue();
+                case STRING -> value.asText();
+                case NULL -> null;
+                default -> value.toString();
+            };
+
+            lista.add(new ParChaveValor(key, valor));
+        });
     }
 }

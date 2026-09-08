@@ -16,32 +16,80 @@ public class SQLDatabase implements BancoDados {
                                      "306/cardapio", "root",
                              "root123456");
              PreparedStatement statement = conexao.prepareStatement(sql);
-             ResultSet rs = statement.executeQuery();){
+             ResultSet rs = statement.executeQuery();) {
 
-            while (rs.next()){
+            while (rs.next()) {
                 long id = rs.getLong("id");
                 String nome = rs.getString("nome");
                 String descricao = rs.getString("descricao");
                 double preco = rs.getDouble("preco");
                 double precoComDesconto = rs.getDouble("preco_promocional");
                 ItemCardapio.CategoriaCardapio categoria = ItemCardapio.CategoriaCardapio.valueOf(rs.getString("categoria"));
-                var itemCardapio = new ItemCardapio(id,nome,descricao,preco,precoComDesconto,categoria);
+                var itemCardapio = new ItemCardapio(id, nome, descricao, preco, precoComDesconto, categoria);
                 itens.add(itemCardapio);
-                }
+            }
             return itens;
         } catch (SQLException e) {
-            throw  new RuntimeException(e);
+            throw new RuntimeException(e);
         }
     }
 
     @Override
     public Optional<ItemCardapio> itemCardapioPorId(Long itemId) {
-        return Optional.empty();
+        String sql = "SELECT * FROM cardapio.item_cardapio WHERE id = ?";
+
+        try (Connection conexao = DriverManager.getConnection(
+                "jdbc:mysql://localhost:3306/cardapio",
+                "root",
+                "root123456");
+             PreparedStatement statement = conexao.prepareStatement(sql)) {
+
+            statement.setLong(1, itemId);
+
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    ItemCardapio item = new ItemCardapio(
+                            rs.getLong("id"),
+                            rs.getString("nome"),
+                            rs.getString("descricao"),
+                            rs.getDouble("preco"),
+                            rs.getDouble("preco_promocional"),
+                            ItemCardapio.CategoriaCardapio.valueOf(
+                                    rs.getString("categoria"))
+                    );
+
+                    return Optional.of(item);
+                }
+
+                return Optional.empty();
+            }
+
+        } catch (SQLException erro) {
+            throw new RuntimeException(erro);
+        }
     }
 
     @Override
     public boolean removerItemCardpio(Long idParaRemover) {
-        return false;
+        String sql = "DELETE FROM cardapio.item_cardapio WHERE id = ?";
+        try (Connection conexao = DriverManager.getConnection(
+                "jdbc:mysql://localhost:3306/cardapio",
+                "root",
+                "root123456");
+             PreparedStatement statement = conexao.prepareStatement(sql)) {
+            statement.setLong(1, idParaRemover);
+            //statement.execute();
+            var total = statement.executeUpdate();
+            if (total > 0) {
+                return true;
+            }
+            return false;
+            //throw new RuntimeException("NAO FOI POSSIVEL REMOVER O ITEM");
+
+
+        } catch (SQLException eroor) {
+            throw new RuntimeException(eroor);
+        }
     }
 
     @Override
@@ -52,15 +100,15 @@ public class SQLDatabase implements BancoDados {
                                      "306/cardapio", "root",
                              "root123456");
              PreparedStatement statement = conexao.prepareStatement(sql);
-             ResultSet rs = statement.executeQuery();){
+             ResultSet rs = statement.executeQuery();) {
             int total = 0;
-            if (rs.next()){
+            if (rs.next()) {
                 total = rs.getInt(1);
                 return total;
             }
             return total;
         } catch (SQLException e) {
-            throw  new RuntimeException(e);
+            throw new RuntimeException(e);
         }
 
     }
@@ -79,7 +127,7 @@ public class SQLDatabase implements BancoDados {
                      DriverManager.getConnection("jdbc:mysql://localhost:3" +
                                      "306/cardapio", "root",
                              "root123456");
-             PreparedStatement statement = conexao.prepareStatement(sql);){
+             PreparedStatement statement = conexao.prepareStatement(sql);) {
 
             statement.setLong(1, id);
             statement.setString(2, nome);
@@ -88,10 +136,14 @@ public class SQLDatabase implements BancoDados {
             statement.setDouble(5, preco_promocional);
             statement.setString(6, categoria.name());
             statement.execute();
-            return new ItemCardapio(id, nome, descricao, preco,preco_promocional, categoria);
+            return new ItemCardapio(id, nome, descricao, preco, preco_promocional, categoria);
         } catch (SQLException e) {
-            throw  new RuntimeException(e);
+            throw new RuntimeException(e);
         }
 
+    }
+    @Override
+    public List<InMemoryDatabase.ParChaveValor> extrairDeArquivoJson(String nomeArquivo) {
+        return null;
     }
 }

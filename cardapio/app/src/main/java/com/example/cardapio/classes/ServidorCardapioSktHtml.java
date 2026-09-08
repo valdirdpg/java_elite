@@ -1,0 +1,182 @@
+package com.example.cardapio.classes;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.logging.Logger;
+
+public class ServidorCardapioSktHtml {
+    private static final int PORTA = 8081;
+    private final Gson gson = new Gson();
+    BancoDados database = new SQLDatabase();
+    private final Logger logs = Logger.getLogger(ServidorCardapioSocket.class.getName());
+    private final List<ItemCardapio> itens = new CopyOnWriteArrayList<>
+            (database.itensDoCardapio());
+    private final List<InMemoryDatabase.ParChaveValor> listaJson;
+    List<InMemoryDatabase.ParChaveValor> resJson = database.extrairDeArquivoJson("itensCardapio.json");
+
+    public ServidorCardapioSktHtml() {
+        this.listaJson = resJson;
+    }
+
+    public static void main(String[] args) throws IOException {
+        new ServidorCardapioSktHtml().iniciar();
+    }
+
+    private void iniciar() throws IOException {
+        ExecutorService executor = Executors.newFixedThreadPool(10);
+        try (ServerSocket servidor = new ServerSocket(PORTA)) {
+            logs.info("Servidor iniciado na porta " + PORTA);
+            while (!servidor.isClosed()) {
+                Socket cliente = servidor.accept();
+                executor.execute(() -> atender(cliente));
+            }
+        } finally {
+            executor.shutdown();
+        }
+    }
+
+    private void atender(Socket cliente) {
+        try (cliente) {
+            Requisicao requisicao = lerRequisicao(cliente.getInputStream());
+            Resposta resposta = processar(requisicao);
+            enviarResposta(cliente.getOutputStream(), resposta);
+        } catch (IOException erro) {
+            logs.severe(() -> "Erro ao atender cliente: " + erro.getMessage());
+        }
+    }
+
+    private Requisicao lerRequisicao(InputStream entrada) throws IOException {
+        ByteArrayOutputStream cabecalho = new ByteArrayOutputStream();
+        int anterior = -1;
+        int atual;
+        while ((atual = entrada.read()) != -1) {
+            cabecalho.write(atual);
+            if (anterior == '\r' && atual == '\n') {
+                byte[] bytes = cabecalho.toByteArray();
+                int tamanho = bytes.length;
+                if (tamanho >= 4 && bytes[tamanho - 4] == '\r' && bytes[tamanho - 3] == '\n'
+                        && bytes[tamanho - 2] == '\r' && bytes[tamanho - 1] == '\n') {
+                    break;
+                }
+            }
+            anterior = atual;
+        }
+
+        String textoCabecalho = cabecalho.toString(StandardCharsets.UTF_8);
+        String[] linhas = textoCabecalho.split("\\r\\n");
+        String[] primeiraLinha = linhas[0].split(" ");
+        int tamanhoCorpo = 0;
+        for (String linha : linhas) {
+            if (linha.toLowerCase().startsWith("content-length:")) {
+                tamanhoCorpo = Integer.parseInt(linha.substring(linha.indexOf(':') + 1).trim());
+            }
+        }
+
+        byte[] corpo = entrada.readNBytes(tamanhoCorpo);
+        return new Requisicao(primeiraLinha[0], primeiraLinha[1], new String(corpo, StandardCharsets.UTF_8));
+    }
+
+    private Resposta processar(Requisicao requisicao) {
+        Logger logger = Logger.getLogger(ServidorCardapioSktHtml.class.getCanonicalName());
+        try {
+            ///Path path = Path.of("itensCardapio.json");
+            if ("GET".equals(requisicao.metodo()) && "/itenscardapio".equals(requisicao.caminho())) {
+                //Files.writeString(path, json);
+                /*if (!Files.exists(path)) {
+                    logger.warning("Arquivo não encontrado: " + path);
+                    return new Resposta(404, "{\"erro\":\"Arquivo não encontrado\"}");
+                }*/
+                //String json = Files.readString(path, StandardCharsets.UTF_8);
+                logger.fine("Requisição GET para /itensCardapio.json");
+                logger.info("Retornando conteúdo do arquivo JSON: " + listaJson.toString().length() + " caracteres");
+                //var arquivo = Files.writeString(path, json);
+                return new Resposta(200, gson.toJson(listaJson));
+            } else if ("GET".equals(requisicao.metodo()) && "/itens-cardapio".equals(requisicao.caminho())) {
+                logger.fine("Requisição GET para /itens-cardapio");
+                return new Resposta(200, gson.toJson(itens));
+            } else if ("GET".equals(requisicao.metodo()) && "/itens-cardapio/total".equals(requisicao.caminho())) {
+                return new Resposta(200, gson.toJson(itens.size()));
+            } else if ("GET".equals(requisicao.metodo())
+                    && requisicao.caminho().startsWith("/itens-cardapio/")) {
+
+                String idTexto = requisicao.caminho()
+                        .substring("/itens-cardapio/".length());
+                try {
+                    long id = Long.parseLong(idTexto);
+
+                    return itens.stream()
+                            .filter(item -> item.id() == id)
+                            .findFirst()
+                            .map(item -> new Resposta(200, gson.toJson(item)))
+                            .orElse(new Resposta(404, "{\"erro\":\"Item nao encontrado\"}" + idTexto));
+
+                } catch (NumberFormatException erro) {
+                    return new Resposta(400, "{\"erro\":\"ID invalido\"}");
+                }
+            } else if ("DELETE".equals(requisicao.metodo()) && requisicao.caminho()
+                    .startsWith("/itens-cardapio/")) {
+                String isTexto = requisicao.caminho()
+                        .substring("/itens-cardapio/".length());
+                try {
+                    long id = Long.parseLong(isTexto);
+                    var remove = database.removerItemCardpio(id);
+                    if (remove) {
+                        return itens.removeIf(item -> item.id() == id) ?
+                                new Resposta(200, gson.toJson("ITEM APAGADO")) :
+                                new Resposta(404, "{\"erro\":\"Item nao encontrado\"}");
+                    } else {
+                        logs.severe(() -> "NAO FOI POSSIVEL REMOVER O ITEM DE ID: " + id);
+                        return new Resposta(400, "{\"erro\":\"O ID é invalido ou não foi encontrado para remoção.\"}");
+                    }
+                } catch (NumberFormatException erro) {
+                    return new Resposta(400, "{\"erro\":\"ID invalido\"}");
+                }
+            } else if ("POST".equals(requisicao.metodo()) && "/itens-cardapio".equals(requisicao.caminho())) {
+                try {
+                    ItemCardapio item = gson.fromJson(requisicao.corpo(), ItemCardapio.class);
+                    itens.add(item);
+                    return new Resposta(201, gson.toJson(item));
+                } catch (JsonSyntaxException erro) {
+                    return new Resposta(400, "{\"erro\":\"JSON invalido\"}");
+                }
+            }
+            return new Resposta(404, "{\"erro\":\"Endpoint nao encontrado\"}");
+        } catch (Exception e) {
+            logger.severe("Erro ao processar requisição: " + e.getMessage());
+            return new Resposta(500, "{\"erro\":\"Erro interno do servidor\"}");
+        }
+    }
+
+    private void enviarResposta(OutputStream saida, Resposta resposta) throws IOException {
+        byte[] corpo = resposta.corpo().getBytes(StandardCharsets.UTF_8);
+        String cabecalho = "HTTP/1.1 " + resposta.status() + " " + textoStatus(resposta.status()) + "\r\n"
+                + "Content-Type: application/json; charset=UTF-8\r\n"
+                + "Content-Length: " + corpo.length + "\r\n"
+                + "Connection: close\r\n\r\n";
+        saida.write(cabecalho.getBytes(StandardCharsets.UTF_8));
+        saida.write(corpo);
+        saida.flush();
+    }
+
+    private String textoStatus(int status) {
+        return status == 201 ? "Created" : status == 400 ? "Bad Request" : status == 404 ? "Not Found" : "OK";
+    }
+
+    private record Requisicao(String metodo, String caminho, String corpo) {
+    }
+
+    private record Resposta(int status, String corpo) {
+    }
+}
