@@ -5,7 +5,7 @@ import java.util.Optional;
 
 public interface BancoDados {
     List<ItemCardapio> itensDoCardapio();
-
+    List<InMemoryDatabase.ParChaveValor> extrairDeArquivoJson(String nomeArquivo);
     Optional<ItemCardapio> itemCardapioPorId(Long itemId);
 
     boolean removerItemCardpio(Long idParaRemover);

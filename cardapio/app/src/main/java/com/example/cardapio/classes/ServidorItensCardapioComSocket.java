@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
+
 import static java.lang.IO.println;
+
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -13,14 +15,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Logger;
 
 public class ServidorItensCardapioComSocket {
+    Logger logger = Logger.getLogger(ServidorItensCardapioComSocket.class.getName());
+
     void main() throws Exception {
         ExecutorService executorService = Executors.newFixedThreadPool(50);
         try (ServerSocket serverSocket = new ServerSocket(8080)) {
-            println("Servidor iniciado na porta 8080");
+            logger.info("Servidor iniciado na porta 8080");
             while (true) {
-                Socket clienteSocket = serverSocket.accept();{
+                Socket clienteSocket = serverSocket.accept();
+                {
                     executorService.execute(() -> {
                         try {
                             processaRequisicao(clienteSocket);
@@ -31,7 +37,7 @@ public class ServidorItensCardapioComSocket {
                     //thread.start();
                     //processaRequisicao(clienteSocket);
                 }
-                
+
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -48,15 +54,14 @@ public class ServidorItensCardapioComSocket {
                 requestBuilder.append(line).append("\r\n");
             }
             String request = requestBuilder.toString();
-            println("Requisição recebida:\n" + request);
-
+            //println("Requisição recebida:\n" + request);
+            logger.finest(() ->"Requisição recebida:\n" + request);
             Path path = Path.of("cardapio/itensCardapio.json");
             String content = Files.readString(path);
             byte[] contentBytes = content.getBytes(StandardCharsets.UTF_8);
 
             OutputStream clienteOutputStream = clienteSocket.getOutputStream();
             PrintStream printStream = new PrintStream(clienteOutputStream, false, StandardCharsets.UTF_8);
-
             printStream.print("HTTP/1.1 200 OK\r\n");
             printStream.print("Content-Type: application/json; charset=UTF-8\r\n");
             printStream.print("Content-Length: " + contentBytes.length + "\r\n");
@@ -66,7 +71,11 @@ public class ServidorItensCardapioComSocket {
             clienteOutputStream.write(contentBytes);
             clienteOutputStream.flush();
 
-            println("Cliente conectado: " + clienteSocket.getInetAddress().getHostAddress());
+            logger.info("Cliente conectado: " + clienteSocket.getInetAddress().getHostAddress());
+
+        } catch (IOException e) {
+            logger.severe("Erro ao processar requisição: " + e.getMessage());
+            throw new RuntimeException(e);
         }finally {
             clienteSocket.close();
         }

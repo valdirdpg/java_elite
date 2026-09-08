@@ -8,9 +8,11 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Logger;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -19,7 +21,9 @@ public class ServidorCardapioSocket {
     private static final int PORTA = 8081;
     private final Gson gson = new Gson();
     BancoDados database = new SQLDatabase();
-    private final List<ItemCardapio> itens = new CopyOnWriteArrayList<>(database.itensDoCardapio());
+    private final Logger logs = Logger.getLogger(ServidorCardapioSocket.class.getName());
+    private final List<ItemCardapio> itens = new CopyOnWriteArrayList<>
+            (database.itensDoCardapio());
 
     public static void main(String[] args) throws IOException {
         new ServidorCardapioSocket().iniciar();
@@ -28,7 +32,7 @@ public class ServidorCardapioSocket {
     private void iniciar() throws IOException {
         ExecutorService executor = Executors.newFixedThreadPool(10);
         try (ServerSocket servidor = new ServerSocket(PORTA)) {
-            System.out.println("Servidor iniciado na porta " + PORTA);
+            logs.info("Servidor iniciado na porta " + PORTA);
             while (!servidor.isClosed()) {
                 Socket cliente = servidor.accept();
                 executor.execute(() -> atender(cliente));
@@ -44,7 +48,7 @@ public class ServidorCardapioSocket {
             Resposta resposta = processar(requisicao);
             enviarResposta(cliente.getOutputStream(), resposta);
         } catch (IOException erro) {
-            System.err.println("Erro ao atender cliente: " + erro.getMessage());
+            logs.severe(() -> "Erro ao atender cliente: " + erro.getMessage());
         }
     }
 
@@ -82,11 +86,44 @@ public class ServidorCardapioSocket {
     private Resposta processar(Requisicao requisicao) {
         if ("GET".equals(requisicao.metodo()) && "/itens-cardapio".equals(requisicao.caminho())) {
             return new Resposta(200, gson.toJson(itens));
-        }
-        if ("GET".equals(requisicao.metodo()) && "/itens-cardapio/total".equals(requisicao.caminho())) {
+        } else if ("GET".equals(requisicao.metodo()) && "/itens-cardapio/total".equals(requisicao.caminho())) {
             return new Resposta(200, gson.toJson(itens.size()));
-        }
-        if ("POST".equals(requisicao.metodo()) && "/itens-cardapio".equals(requisicao.caminho())) {
+        } else if ("GET".equals(requisicao.metodo())
+                && requisicao.caminho().startsWith("/itens-cardapio/")) {
+
+            String idTexto = requisicao.caminho()
+                    .substring("/itens-cardapio/".length());
+            try {
+                long id = Long.parseLong(idTexto);
+
+                return itens.stream()
+                        .filter(item -> item.id() == id)
+                        .findFirst()
+                        .map(item -> new Resposta(200, gson.toJson(item)))
+                        .orElse(new Resposta(404, "{\"erro\":\"Item nao encontrado\"}" + idTexto));
+
+            } catch (NumberFormatException erro) {
+                return new Resposta(400, "{\"erro\":\"ID invalido\"}");
+            }
+        } else if ("DELETE".equals(requisicao.metodo()) && requisicao.caminho()
+                .startsWith("/itens-cardapio/")) {
+            String isTexto = requisicao.caminho()
+                    .substring("/itens-cardapio/".length());
+            try {
+                long id = Long.parseLong(isTexto);
+                var remove = database.removerItemCardpio(id);
+                if (remove) {
+                    return itens.removeIf(item -> item.id() == id) ?
+                            new Resposta(200, gson.toJson("ITEM APAGADO")) :
+                            new Resposta(404, "{\"erro\":\"Item nao encontrado\"}");
+                } else {
+                    logs.severe(() -> "NAO FOI POSSIVEL REMOVER O ITEM DE ID: " + id);
+                    return new Resposta(400, "{\"erro\":\"O ID é invalido ou não foi encontrado para remoção.\"}");
+                }
+            } catch (NumberFormatException erro) {
+                return new Resposta(400, "{\"erro\":\"ID invalido\"}");
+            }
+        } else if ("POST".equals(requisicao.metodo()) && "/itens-cardapio".equals(requisicao.caminho())) {
             try {
                 ItemCardapio item = gson.fromJson(requisicao.corpo(), ItemCardapio.class);
                 itens.add(item);
