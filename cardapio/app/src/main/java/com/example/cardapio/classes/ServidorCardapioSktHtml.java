@@ -17,12 +17,11 @@ import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
 public class ServidorCardapioSktHtml {
-    private static final int PORTA = 8081;
+    private static final int PORTA = 8060;
     private final Gson gson = new Gson();
     BancoDados database = new SQLDatabase();
     private final Logger logs = Logger.getLogger(ServidorCardapioSocket.class.getName());
-    private final List<ItemCardapio> itens = new CopyOnWriteArrayList<>
-            (database.itensDoCardapio());
+    private final List<ItemCardapio> itens = new CopyOnWriteArrayList<>(database.itensDoCardapio());
     private final List<InMemoryDatabase.ParChaveValor> listaJson;
     List<InMemoryDatabase.ParChaveValor> resJson = database.extrairDeArquivoJson("itensCardapio.json");
 
@@ -91,17 +90,12 @@ public class ServidorCardapioSktHtml {
     private Resposta processar(Requisicao requisicao) {
         Logger logger = Logger.getLogger(ServidorCardapioSktHtml.class.getCanonicalName());
         try {
-            ///Path path = Path.of("itensCardapio.json");
+
             if ("GET".equals(requisicao.metodo()) && "/itenscardapio".equals(requisicao.caminho())) {
-                //Files.writeString(path, json);
-                /*if (!Files.exists(path)) {
-                    logger.warning("Arquivo não encontrado: " + path);
-                    return new Resposta(404, "{\"erro\":\"Arquivo não encontrado\"}");
-                }*/
-                //String json = Files.readString(path, StandardCharsets.UTF_8);
+
                 logger.fine("Requisição GET para /itensCardapio.json");
                 logger.info("Retornando conteúdo do arquivo JSON: " + listaJson.toString().length() + " caracteres");
-                //var arquivo = Files.writeString(path, json);
+
                 return new Resposta(200, gson.toJson(listaJson));
             } else if ("GET".equals(requisicao.metodo()) && "/itens-cardapio".equals(requisicao.caminho())) {
                 logger.fine("Requisição GET para /itens-cardapio");
@@ -133,9 +127,8 @@ public class ServidorCardapioSktHtml {
                     long id = Long.parseLong(isTexto);
                     var remove = database.removerItemCardpio(id);
                     if (remove) {
-                        return itens.removeIf(item -> item.id() == id) ?
-                                new Resposta(200, gson.toJson("ITEM APAGADO")) :
-                                new Resposta(404, "{\"erro\":\"Item nao encontrado\"}");
+                        return itens.removeIf(item -> item.id() == id) ? new Resposta(200, gson.toJson("ITEM APAGADO"))
+                                : new Resposta(404, "{\"erro\":\"Item nao encontrado\"}");
                     } else {
                         logs.severe(() -> "NAO FOI POSSIVEL REMOVER O ITEM DE ID: " + id);
                         return new Resposta(400, "{\"erro\":\"O ID é invalido ou não foi encontrado para remoção.\"}");
